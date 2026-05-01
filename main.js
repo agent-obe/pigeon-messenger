@@ -85,7 +85,7 @@ const render = () => {
           <div class="pigeon-card ${hasIncomingMessage ? 'incoming-card' : ''}">
             <div class="string ${hasIncomingMessage ? 'string-incoming' : ''}"></div>
 
-            <div class="paper-preview ${hasIncomingMessage ? 'paper-tied incoming-paper' : ''}">
+            <div class="paper-preview ${hasIncomingMessage ? `paper-tied incoming-paper ${state.noteOpened ? 'note-opened' : ''}` : ''}">
               <div class="paper-lines">${hasIncomingMessage ? '<span class=\"paper-seal\">sealed note</span>' : previewText}</div>
             </div>
 
