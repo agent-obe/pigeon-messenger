@@ -36,6 +36,10 @@ button, textarea, input { font: inherit; }
   align-items: center;
 }
 
+.hero.recipient-mode {
+  grid-template-columns: 0.82fr 1.18fr;
+}
+
 .badge {
   display: inline-block;
   padding: 8px 14px;
@@ -56,8 +60,9 @@ h1 {
 .subtitle, .flair, .tiny { color: var(--muted); }
 .subtitle { font-size: 1.08rem; max-width: 56ch; }
 .flair { font-weight: 700; margin-top: 14px; }
+.address-line { color: #5f5a68; font-size: 1rem; }
 
-.scene { position: relative; min-height: 430px; }
+.scene { position: relative; min-height: 480px; }
 .cloud {
   position: absolute;
   background: rgba(255,255,255,0.9);
@@ -67,7 +72,7 @@ h1 {
 .cloud-a { width: 130px; height: 42px; top: 18px; right: 94px; }
 .cloud-b { width: 90px; height: 28px; top: 66px; left: 24px; }
 
-.pigeon-card, .receive-card, .paper, .share-box {
+.pigeon-card, .paper, .share-box {
   background: rgba(255,255,255,0.76);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.65);
@@ -77,9 +82,13 @@ h1 {
 
 .pigeon-card {
   position: relative;
-  min-height: 430px;
+  min-height: 460px;
   overflow: hidden;
   padding: 24px;
+}
+
+.incoming-card {
+  min-height: 560px;
 }
 
 .paper-preview {
@@ -104,7 +113,18 @@ h1 {
   line-height: 1.15;
 }
 
+.paper-tied {
+  top: 210px;
+  left: 92px;
+  width: 140px;
+  min-height: 110px;
+  transform: rotate(10deg);
+  z-index: 3;
+  animation: note-sway 2.2s ease-in-out infinite;
+}
+
 .paper-lines { color: #6a513a; }
+.paper-seal { opacity: 0.7; letter-spacing: 0.04em; text-transform: uppercase; }
 .placeholder { opacity: 0.55; }
 .string {
   position: absolute;
@@ -116,11 +136,22 @@ h1 {
   transform: rotate(7deg);
 }
 
+.string-incoming {
+  top: 278px;
+  left: 204px;
+  width: 92px;
+  transform: rotate(26deg);
+  z-index: 2;
+}
+
 .pigeon { position: absolute; right: 26px; bottom: 30px; width: 300px; height: 290px; }
+.pigeon-idle { animation: bob 3.2s ease-in-out infinite; }
+.pigeon-delivering { right: 42px; bottom: 120px; transform: scale(1.08); animation: fly-bob 2.6s ease-in-out infinite; }
 .body, .wing, .belly, .neck, .head, .tail { position: absolute; border-radius: 50%; }
 .body { width: 190px; height: 160px; background: #a6b8d7; bottom: 52px; left: 56px; }
 .belly { width: 112px; height: 110px; background: #dce8f7; bottom: 64px; left: 96px; }
 .wing { width: 118px; height: 138px; background: #879bc3; bottom: 84px; left: 80px; transform: rotate(18deg); }
+.pigeon-delivering .wing { animation: flap 0.9s ease-in-out infinite; transform-origin: 72% 70%; }
 .neck { width: 70px; height: 84px; background: #a6b8d7; left: 170px; bottom: 145px; transform: rotate(18deg); }
 .head { width: 88px; height: 82px; background: #a6b8d7; left: 190px; bottom: 186px; }
 .beak {
@@ -141,11 +172,21 @@ h1 {
 .foot-a { left: 135px; }
 .foot-b { left: 169px; }
 
-.receive-section, .composer-section { margin-top: 28px; }
-.receive-card, .composer { padding: 24px; }
-.composer { display: grid; grid-template-columns: 1.2fr 0.9fr; gap: 22px; }
-.receive-header, .composer-footer, .link-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.receive-header span, .label, .share-box h2 { font-weight: 800; }
+.delivery-panel {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.composer-section { margin-top: 28px; }
+.composer { padding: 24px; display: grid; grid-template-columns: 1.2fr 0.9fr; gap: 22px; }
+.composer-footer, .link-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.label, .share-box h2 { font-weight: 800; }
 
 .paper { padding: 18px; background: var(--paper); }
 .paper-top { display: flex; gap: 8px; margin-bottom: 10px; }
@@ -196,8 +237,8 @@ button[disabled] { opacity: 0.72; cursor: default; transform: none !important; }
   color: #4f4b5b;
 }
 
-.hidden-note { display: none; margin-top: 18px; }
-.hidden-note.open { display: block; }
+.hidden-note { display: none; width: min(420px, 100%); }
+.hidden-note.open { display: block; animation: unfold 240ms ease-out; }
 .received-paper {
   background: repeating-linear-gradient(
     to bottom,
@@ -210,22 +251,51 @@ button[disabled] { opacity: 0.72; cursor: default; transform: none !important; }
   border: 2px solid #f1e4c8;
 }
 .received-paper h2 { margin-top: 0; }
-.meta-note { color: #7a6752; margin-bottom: 8px; font-family: 'Nunito', sans-serif !important; font-size: 1rem !important; }
 .received-paper p { font-family: 'Patrick Hand', cursive; font-size: 1.5rem; line-height: 1.35; color: #654d39; }
 
+@keyframes bob {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes fly-bob {
+  0%, 100% { transform: translateY(0px) scale(1.08); }
+  50% { transform: translateY(-14px) scale(1.08); }
+}
+
+@keyframes flap {
+  0%, 100% { transform: rotate(18deg); }
+  50% { transform: rotate(-6deg); }
+}
+
+@keyframes note-sway {
+  0%, 100% { transform: rotate(10deg) translateY(0px); }
+  50% { transform: rotate(14deg) translateY(-4px); }
+}
+
+@keyframes unfold {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @media (max-width: 920px) {
-  .hero, .composer { grid-template-columns: 1fr; }
-  .scene { min-height: 380px; }
-  .pigeon { transform: scale(0.92); transform-origin: bottom right; }
+  .hero, .hero.recipient-mode, .composer { grid-template-columns: 1fr; }
+  .scene { min-height: 430px; }
+  .pigeon { transform-origin: bottom right; }
+  .pigeon-delivering { right: 12px; bottom: 136px; }
 }
 
 @media (max-width: 640px) {
   .page { width: min(100vw - 20px, 1120px); padding-top: 18px; }
   h1 { font-size: 2.4rem; }
-  .pigeon-card { min-height: 360px; }
+  .pigeon-card { min-height: 390px; }
+  .incoming-card { min-height: 520px; }
   .paper-preview { width: 145px; min-height: 132px; left: 18px; top: 92px; }
+  .paper-tied { top: 212px; left: 24px; width: 124px; min-height: 92px; }
   .string { left: 150px; width: 66px; }
+  .string-incoming { top: 266px; left: 122px; width: 80px; }
   .pigeon { right: -8px; bottom: 12px; transform: scale(0.74); }
-  .receive-header, .composer-footer, .link-row { flex-direction: column; align-items: stretch; }
+  .pigeon-delivering { right: -24px; bottom: 136px; transform: scale(0.82); }
+  .composer-footer, .link-row { flex-direction: column; align-items: stretch; }
   .name-row { grid-template-columns: 1fr; }
 }
